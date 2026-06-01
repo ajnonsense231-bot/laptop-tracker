@@ -948,28 +948,38 @@ function togStaff(i){staff[i].active=!staff[i].active;save();toast(staff[i].acti
 
 function openAddRepair(){
   const lps=laptops.filter(l=>l.status!=='Scrap');
-  document.getElementById('ar-lp').innerHTML=lps.map(l=>`<option value="${l.id}">${l.id} — ${l.make} ${l.model||''}</option>`).join('');
-  fillRepairMake();
+  if(!lps.length){toast('No laptops available to log repair','err');return;}
+  const sel=document.getElementById('ar-lp');
+  sel.innerHTML=lps.map(l=>`<option value="${l.id}">${l.id} — ${l.make} ${l.model||''}</option>`).join('');
+  setTimeout(fillRepairMake, 50);
   document.getElementById('ar-sent').value=td();
+  document.getElementById('ar-exp').value='';
+  document.getElementById('ar-vendor').value='';
+  document.getElementById('ar-notes').value='';
   openModal('m-add-repair');
 }
 function fillRepairMake(){
   const id=document.getElementById('ar-lp').value;
+  if(!id){document.getElementById('ar-make').value='';return;}
   const l=laptops.find(x=>x.id===id);
   document.getElementById('ar-make').value=l?`${l.make} ${l.model||''}`:'';
 }
 function addRepair(){
   const lapId=document.getElementById('ar-lp').value;
   const sent=document.getElementById('ar-sent').value;
-  if(!lapId||!sent){toast('Laptop and Sent Date required','err');return;}
+  if(!lapId){toast('Please select a laptop','err');return;}
+  if(!sent){toast('Please enter the sent date','err');return;}
   const l=laptops.find(x=>x.id===lapId);
-  repairs.push({laptopId:lapId,make:l?`${l.make} ${l.model||''}`:'',
-    sentDate:sent,expReturn:document.getElementById('ar-exp').value,
+  repairs.push({
+    laptopId:lapId,
+    make:l?`${l.make} ${l.model||''}`:'',
+    sentDate:sent,
+    expReturn:document.getElementById('ar-exp').value,
     vendor:document.getElementById('ar-vendor').value.trim(),
-    notes:document.getElementById('ar-notes').value.trim()});
-  if(l)l.status='Damaged';
+    notes:document.getElementById('ar-notes').value.trim()
+  });
+  if(l){l.status='Damaged';}
   save();closeModal('m-add-repair');
-  ['ar-vendor','ar-notes','ar-exp'].forEach(x=>document.getElementById(x).value='');
   toast('Repair logged!');renderRepairTbl();renderDash();
 }
 function openCloseRep(i){
